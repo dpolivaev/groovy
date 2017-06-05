@@ -364,8 +364,7 @@ variableDeclaratorId
     ;
 
 variableInitializer
-    :   statementExpression
-    |   standardLambda
+    :   enhancedStatementExpression
     ;
 
 variableInitializers
@@ -491,12 +490,12 @@ gstringPath
 
 
 // LAMBDA EXPRESSION
-lambda
-options { baseContext = standardLambda; }
+lambdaExpression
+options { baseContext = standardLambdaExpression; }
 	:	lambdaParameters nls ARROW nls lambdaBody
 	;
 
-standardLambda
+standardLambdaExpression
 	:	standardLambdaParameters nls ARROW nls lambdaBody
 	;
 
@@ -625,14 +624,14 @@ variableNames
 
 switchStatement
 locals[ String footprint = "" ]
-    :   SWITCH parExpression nls LBRACE nls switchBlockStatementGroup* nls RBRACE
+    :   SWITCH expressionInPar nls LBRACE nls switchBlockStatementGroup* nls RBRACE
     ;
 
 loopStatement
 locals[ String footprint = "" ]
     :   FOR LPAREN forControl rparen nls statement                                                          #forStmtAlt
-    |   WHILE parExpression nls statement                                                                   #whileStmtAlt
-    |   DO nls statement nls WHILE parExpression                                                            #doWhileStmtAlt
+    |   WHILE expressionInPar nls statement                                                                   #whileStmtAlt
+    |   DO nls statement nls WHILE expressionInPar                                                            #doWhileStmtAlt
     ;
 
 continueStatement
@@ -679,7 +678,7 @@ locals[boolean resourcesExists = false]
         |
             nls finallyBlock
         |
-            // a catch or finally clause is required unless it's try-with-resources
+            // try-with-resources can have no catche and finally clauses
             { $resourcesExists }?<fail={"catch or finally clauses are required for try-catch statement"}>
         )
     ;
@@ -691,13 +690,13 @@ locals[ String footprint = "" ]
 
 statement
     :   block                                                                                               #blockStmtAlt
-    |   IF parExpression nls tb=statement ((nls | sep) ELSE nls fb=statement)?                              #ifElseStmtAlt
+    |   IF expressionInPar nls tb=statement ((nls | sep) ELSE nls fb=statement)?                              #ifElseStmtAlt
     |   loopStatement                                                                                       #loopStmtAlt
 
     |   tryCatchStatement                                                                                   #tryCatchStmtAlt
 
     |   switchStatement                                                                                     #switchStmtAlt
-    |   SYNCHRONIZED parExpression nls block                                                                #synchronizedStmtAlt
+    |   SYNCHRONIZED expressionInPar nls block                                                                #synchronizedStmtAlt
     |   RETURN expression?                                                                                  #returnStmtAlt
     |   THROW expression                                                                                    #throwStmtAlt
 
@@ -734,7 +733,6 @@ catchType
 finallyBlock
     :   FINALLY nls block
     ;
-
 
 resources
     :   LPAREN nls resourceList sep? rparen
@@ -792,7 +790,11 @@ castParExpression
     ;
 
 parExpression
-    :   LPAREN (statementExpression | standardLambda) rparen
+    :   expressionInPar
+    ;
+
+expressionInPar
+    :   LPAREN enhancedStatementExpression rparen
     ;
 
 expressionList[boolean canSpread]
@@ -803,6 +805,11 @@ expressionListElement[boolean canSpread]
     :   (   MUL { require($canSpread, "spread operator is not allowed here", -1); }
         |
         ) expression
+    ;
+
+enhancedStatementExpression
+    :   statementExpression
+    |   standardLambdaExpression
     ;
 
 /**
@@ -920,7 +927,7 @@ expression
                            |   POWER_ASSIGN
                            |   ELVIS_ASSIGN
                            ) nls
-                     (statementExpression | standardLambda)                                 #assignmentExprAlt
+                     enhancedStatementExpression                                            #assignmentExprAlt
     ;
 
 commandExpression
@@ -1064,7 +1071,7 @@ primary
     |   SUPER                                                                               #superPrmrAlt
     |   parExpression                                                                       #parenPrmrAlt
     |   closure                                                                             #closurePrmrAlt
-    |   lambda                                                                              #lambdaPrmrAlt
+    |   lambdaExpression                                                                              #lambdaPrmrAlt
     |   list                                                                                #listPrmrAlt
     |   map                                                                                 #mapPrmrAlt
     |   builtInType                                                                         #typePrmrAlt
@@ -1170,7 +1177,7 @@ options { baseContext = enhancedArgumentListElement; }
 
 enhancedArgumentListElement
     :   expressionListElement[true]
-    |   standardLambda
+    |   standardLambdaExpression
     |   mapEntry
     ;
 

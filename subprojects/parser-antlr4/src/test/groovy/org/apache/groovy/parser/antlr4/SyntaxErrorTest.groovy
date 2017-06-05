@@ -121,6 +121,7 @@ class SyntaxErrorTest extends GroovyTestCase {
     void "test groovy core - BUGs"() {
         TestUtils.doRunAndShouldFail('bugs/BUG-GROOVY-5318.groovy');
         TestUtils.doRunAndShouldFail('bugs/BUG-GROOVY-8150.groovy');
+        TestUtils.doRunAndShouldFail('bugs/BUG-GROOVY-8216.groovy');
     }
 
     void "test groovy core - DoWhile"() {
@@ -143,6 +144,7 @@ class SyntaxErrorTest extends GroovyTestCase {
 
     void "test groovy core - ClassDeclaration"() {
         TestUtils.doRunAndShouldFail('fail/ClassDeclaration_01x.groovy');
+        TestUtils.doRunAndShouldFail('fail/ClassDeclaration_02x.groovy');
     }
 
     void "test groovy core - MethodDeclaration"() {

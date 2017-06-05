@@ -66,6 +66,12 @@ public class NumberValue extends java.lang.Number implements Value {
         } catch (Exception ex) {
             Exceptions.handle(sputs("exception", ex, "start", startIndex, "end", endIndex), ex);
         }
+
+        // Check for a single minus now, rather than finding out later during lazy parsing.
+        if (this.endIndex - this.startIndex == 1 && this.buffer[this.startIndex] == '-') {
+            die("A single minus is not a valid number");
+        }
+
     }
 
     public String toString() {
@@ -104,16 +110,10 @@ public class NumberValue extends java.lang.Number implements Value {
             case DOUBLE:
                 return bigDecimalValue();
             case INTEGER:
-                int sign = 1;
-                if (buffer[startIndex] == '-') {
-                    startIndex++;
-                    sign = -1;
-                }
-
                 if (isInteger(buffer, startIndex, endIndex - startIndex)) {
-                    return intValue() * sign;
+                    return intValue();
                 } else {
-                    return longValue() * sign;
+                    return longValue();
                 }
         }
         die();
@@ -168,12 +168,7 @@ public class NumberValue extends java.lang.Number implements Value {
     }
 
     public int intValue() {
-        int sign = 1;
-        if (buffer[startIndex] == '-') {
-            startIndex++;
-            sign = -1;
-        }
-        return parseIntFromTo(buffer, startIndex, endIndex) * sign;
+        return parseIntFromTo(buffer, startIndex, endIndex);
     }
 
     public long longValue() {
